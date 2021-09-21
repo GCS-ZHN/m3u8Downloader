@@ -6,10 +6,10 @@ HTTP Live Streaming（缩写是HLS）是一个由苹果公司提出的基于HTTP
 
 # 二、项目功能
 
-基于提供的m3u8清单文件，将视频下载、解密并合成为mp4文件。适用于采用HLS的视频网站，在没有直接提供下载方式的免费视频进行下载。
+基于提供的m3u8清单文件，将视频下载、解密并合成为mp4文件。适用于采用HLS的视频网站，在没有直接提供下载方式的免费视频进行下载。在网速较慢在线体验不佳，但又没下载按钮时，是否适用。
 
 ## 2.1 安装
-克隆被项目到本地，`pip install -r requirements.txt`安装依赖包，最后
+克隆本项目到本地，`pip install -r requirements.txt`安装依赖包，最后
 
     python MediaDownload.py --input <你的m3u8清单文件> --output <你的mp4输出文件>
 
@@ -28,7 +28,7 @@ HTTP Live Streaming（缩写是HLS）是一个由苹果公司提出的基于HTTP
 
 例如：
 
-    python MediaDownload.py --input https://***/index.m3u8 --output movie/test.mp4 --adfilter
+    python MediaDownload.py --input https://***/v.m3u8 --output movie/test.mp4 --adfilter
 
 ## 2.2 m3u8文件来源
 该文件的URL不是视频网页的地址URL，需要通过F12开发者工具的网络选项进行查看，相信爬虫学习者有这点网络知识基础。值得说的，--input参数默认是当前文件夹下的index.m3u8文件。该参数可以是URL也可以是本地文件地址，推荐使用URL，因为m3u8内部的视频地址可能是相对地址。
