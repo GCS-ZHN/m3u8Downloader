@@ -19,39 +19,41 @@ HTTP Live Streaming（缩写是HLS）是一个由苹果公司提出的基于HTTP
 
 ## 2.1 安装与使用
 克隆本项目到本地，`pip install -r requirements.txt`安装依赖包，最后
-
-    python MediaDownload.py --input <你的m3u8清单文件> --output <你的mp4输出文件>
-
+```shell
+python MediaDownload.py <你的m3u8清单文件> <你的mp4输出文件>
+```
 脚本提供了以下几个参数，可以`python MediaDownload.py --help`查看。
+```
+usage: 该脚本用于下载m3u8视频流 [-h] [--referer REFERER] [--adfilter] input output
 
-    usage: 该脚本用于下载m3u8视频流 [-h] [--input INPUT] [--output OUTPUT] [--referer REFERER] [--adfilter]
+positional arguments:
+  input                       m3u8输入文件或URL
+  output                    下载保存的mp4文件名
 
-    optional arguments:
-    -h, --help         show this help message and exit
-    --input INPUT      m3u8输入文件或URL
-    --output OUTPUT    下载保存的mp4文件名
-    --referer REFERER  自定义Referer请求头，部分网站基于它反爬
-    --adfilter         是否过滤内插广告流
-
+optional arguments:
+  -h, --help                show this help message and exit
+  --referer REFERER   自定义Referer请求头，部分网站基于它反爬
+  --adfilter                 是否过滤内插广告流
+```
 其中加入`--adfilter`参数，会将视频里面其他解码方式的视频作为广告而过滤，因为广告与正文往往不同视频流。
 
 例如：
-
-    python MediaDownload.py --input https://***/v.m3u8 --output movie/test.mp4 --adfilter
-
+```shell
+python MediaDownload.py https://***/v.m3u8 movie/test.mp4 --adfilter
+```
 ## 2.2 m3u8文件来源
 m3u8可以从本地文件或URL来输入
 
 ### 指定本地文件输入
-
-    python MediaDownload.py --input /your/path/of/target.m3u8 --output /your/path/of/target.mp4
-
+```shell
+python MediaDownload.py /your/path/of/target.m3u8 /your/path/of/target.mp4
+```
 本地输入的局限性在于，要求m3u8内的ts地址必须是完整的URL，因为本地路径不是URL，解析相对URL。
 
 ### 指定URL输入
-
-    python MediaDownload.py --input https://your/url/of/target.m3u8  --output /your/path/of/target.mp4
-
+```shell
+python MediaDownload.py https://your/url/of/target.m3u8  /your/path/of/target.mp4
+```
 推荐使用URL指定输入。 
 # 三、提醒
 该工具属于爬虫工具，仅供学习交流使用，非法传播视频或构成侵权。不同网站或有不同的反爬机制，例如某网站会要求指定的“Referer”请求头来区分请求，需要--referer参数手动指定。因此对于不同网站，脚本可能不一定生效，有兴趣请自行修改脚本。

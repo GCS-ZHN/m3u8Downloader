@@ -2,7 +2,7 @@
 # Author: Zhang.H.N
 # Email: zhang.h.n@foxmail.com
 # Created: 2021-09-21
-# Version: 1.0
+# Version: 1.1
 
 import os
 import threading
@@ -11,6 +11,7 @@ import shutil
 import time
 import argparse
 import urllib.parse as urlparse
+import abc
 
 from typing import Iterable
 from concurrent.futures import ThreadPoolExecutor
@@ -24,10 +25,35 @@ def asyn(func):
         threadPool.submit(func, *args, **kwargs)
     return asynFunc
 
-class MediaDownloader(object):
+class MediaDownloader(metaclass=abc.ABCMeta):
     """通用媒体下载器的抽象实现，便于多种媒体扩展实现"""
+    headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests':'1'
+        }
+    
+    @abc.abstractmethod
     def download(self):
-        pass
+        """下载的抽象接口"""
+        raise NotImplementedError()
+
+    @classmethod
+    def httpGet(cls, url:str, **kwargs)->requests.Response:
+        """
+        内部通用的http GET请求，暂不支持自动重定向
+
+        Args:
+            url  请求的目标URL
+        """
+        response=requests.get(url, headers=cls.headers, **kwargs)
+        if response.status_code>=300:
+            print(f"Error, HTTP status code {response.status_code}")
+            return
+        return response
 
 class M3u8MediaDownloader(MediaDownloader):
     """
@@ -53,14 +79,6 @@ class M3u8MediaDownloader(MediaDownloader):
         self.__running=0
         self.__targetList = []
 
-        self.__headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests':'1'
-        }
         if isinstance(headers, dict):
             self.__headers.update(headers)
 
@@ -95,7 +113,7 @@ class M3u8MediaDownloader(MediaDownloader):
         Args:
             m3u8Url 目标视频的m3u8文件地址
         """
-        response = self.__httpGet(m3u8Url, timeout=200)
+        response = self.httpGet(m3u8Url, timeout=200)
         if response==None:
             print(f"Fail get {m3u8Url}")
             return
@@ -192,7 +210,7 @@ class M3u8MediaDownloader(MediaDownloader):
             try:
                 # TS数据获取
                 url,aesIdx=self.__targetList[idx]
-                response = self.__httpGet(url, timeout=100)
+                response = self.httpGet(url, timeout=100)
                 if response==None:
                     raise requests.RequestException(f"Get ts fragment failed")
                 data = response.content
@@ -304,19 +322,6 @@ class M3u8MediaDownloader(MediaDownloader):
         print("Clean cache file...")
         shutil.rmtree(self.__tmpDir)
 
-    def __httpGet(self, url:str, **kwargs)->requests.Response:
-        """
-        内部通用的http GET请求，暂不支持自动重定向
-
-        Args:
-            url  请求的目标URL
-        """
-        response=requests.get(url, headers=self.__headers, **kwargs)
-        if response.status_code>=300:
-            print(f"Error, HTTP status code {response.status_code}")
-            return
-        return response
-
     def __getKey(self, url:str)->str:
         """
         获取m3u8指定的AES加密key值，一旦获取失败，会退出程序，因为后续解码必然错误而没必要运行
@@ -331,7 +336,7 @@ class M3u8MediaDownloader(MediaDownloader):
             return self.__keyCache[url]
         
         print(f"Try to get key from {url}")
-        response=self.__httpGet(url)
+        response=self.httpGet(url)
         if response==None:
             print(f"Get key from {url} failed, exit.")
             exit(1)
@@ -360,15 +365,13 @@ class M3u8MediaDownloader(MediaDownloader):
             return None
 
 if __name__ == "__main__":
-    try:
-        parser  = argparse.ArgumentParser("该脚本用于下载m3u8视频流")  
-        parser.add_argument("--input", default="index", type=str, help="m3u8输入文件或URL")
-        parser.add_argument("--output", default="index", type=str, help="下载保存的mp4文件名")
-        parser.add_argument("--referer", default=None, type=str, help="自定义Referer请求头，部分网站基于它反爬")
-        parser.add_argument("--adfilter", action="store_true", help="是否过滤内插广告流")
-        args = parser.parse_args()
-        headers={"Referer":args.referer} if args.referer!=None else None
-        md = M3u8MediaDownloader(args.input, headers=headers, adFilter=args.adfilter)
-        md.download(args.output)
-    except Exception as e:
-        print(e)
+    parser  = argparse.ArgumentParser("该脚本用于下载m3u8视频流")  
+    parser.add_argument("input", default="index", type=str, help="m3u8输入文件或URL")
+    parser.add_argument("output", default="index", type=str, help="下载保存的mp4文件名")
+    parser.add_argument("--referer", default=None, type=str, help="自定义Referer请求头，部分网站基于它反爬")
+    parser.add_argument("--adfilter", action="store_true", help="是否过滤内插广告流")
+    args = parser.parse_args()
+    headers={"Referer":args.referer} if args.referer!=None else None
+    md = M3u8MediaDownloader(args.input, headers=headers, adFilter=args.adfilter)
+    md.download(args.output)
+
