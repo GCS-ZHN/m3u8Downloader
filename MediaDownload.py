@@ -27,7 +27,8 @@ def asyn(func):
 
 class MediaDownloader(metaclass=abc.ABCMeta):
     """通用媒体下载器的抽象实现，便于多种媒体扩展实现"""
-    headers={
+    def __init__(self) -> None:        
+        self.headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -41,15 +42,14 @@ class MediaDownloader(metaclass=abc.ABCMeta):
         """下载的抽象接口"""
         raise NotImplementedError()
 
-    @classmethod
-    def httpGet(cls, url:str, **kwargs)->requests.Response:
+    def httpGet(self, url:str, **kwargs)->requests.Response:
         """
         内部通用的http GET请求，暂不支持自动重定向
 
         Args:
             url  请求的目标URL
         """
-        response=requests.get(url, headers=cls.headers, **kwargs)
+        response=requests.get(url, headers=self.headers, **kwargs)
         if response.status_code>=300:
             print(f"Error, HTTP status code {response.status_code}")
             return
@@ -70,6 +70,7 @@ class M3u8MediaDownloader(MediaDownloader):
             adFilter 是否过滤多视频流的广告
             headers  自定义请求头的字典
         """
+        super(M3u8MediaDownloader, self).__init__()
         self.__mediaSeq=None
         self.__keyCache=dict()
         self.__adFilter=adFilter
@@ -80,7 +81,7 @@ class M3u8MediaDownloader(MediaDownloader):
         self.__targetList = []
 
         if isinstance(headers, dict):
-            self.__headers.update(headers)
+            self.headers.update(headers)
 
         urlResult = urlparse.urlparse(m3u8Source)
         if urlResult.scheme:
@@ -171,7 +172,7 @@ class M3u8MediaDownloader(MediaDownloader):
                         authDict.clear()
                         break
                     if name=="URI":
-                        authDict["key"]=self.__getKey(eval(value))
+                        authDict["key"]=self.__getKey(urlparse.urljoin(self.__m3u8Source,eval(value)))
                     if name=="IV":
                         authDict["iv"]=value
                 self.__aesList.append(authDict)
