@@ -1,0 +1,1 @@
+for %%a in (*.ts) do ffmpeg -i "%%~a" -codec copy -f mp4 "%%~na.mp4"

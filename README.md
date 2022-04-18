@@ -15,12 +15,12 @@ HTTP Live Streaming（缩写是HLS）是一个由苹果公司提出的基于HTTP
 
 # 二、项目功能
 
-基于指定的m3u8清单文件，将视频下载、解密并合成为mp4文件。适用于采用HLS的视频网站，在没有直接提供下载方式的免费视频进行下载。在网速较慢在线体验不佳，但又没下载按钮时，是否适用。
+基于指定的m3u8清单文件，将视频下载、解密并合成单一的ts视频文件。适用于采用HLS的视频网站，在没有直接提供下载方式的免费视频进行下载。在网速较慢在线体验不佳，但又没下载按钮时，是否适用。
 
 ## 2.1 安装与使用
 克隆本项目到本地，`pip install -r requirements.txt`安装依赖包，最后
 ```shell
-python MediaDownload.py <你的m3u8清单文件> <你的mp4输出文件>
+python MediaDownload.py <你的m3u8清单文件> <你的ts输出文件>
 ```
 脚本提供了以下几个参数，可以`python MediaDownload.py --help`查看。
 ```
@@ -39,20 +39,30 @@ optional arguments:
 
 例如：
 ```shell
-python MediaDownload.py https://***/v.m3u8 movie/test.mp4 --adfilter
+python MediaDownload.py https://***/v.m3u8 movie/test.ts --adfilter
 ```
+
 ## 2.2 m3u8文件来源
 m3u8可以从本地文件或URL来输入
 
+## 2.3 视频格式转码
+推荐使用ffmpeg工具进行视频格式转码，本项目提供了windows版本的ffmpeg工具，以及linux和windows下将文件夹下ts视频转码为mp4的示例脚本`ts2mp4`。linux下需要事先安装ffmpeg工具。
+```shell
+sudo apt-get install ffmpeg
+```
+脚本使用方法：
+- ts2mp4.bat： windows下，双击会将当前目录的ts格式文件转换为mp4格式文件
+- ts2mp4.sh ：linux下，bash运行它，会将当前目录的ts转换。或者指定目录在命令后面。
+
 ### 指定本地文件输入
 ```shell
-python MediaDownload.py /your/path/of/target.m3u8 /your/path/of/target.mp4
+python MediaDownload.py /your/path/of/target.m3u8 /your/path/of/target.ts
 ```
 本地输入的局限性在于，要求m3u8内的ts地址必须是完整的URL，因为本地路径不是URL，解析相对URL。
 
 ### 指定URL输入
 ```shell
-python MediaDownload.py https://your/url/of/target.m3u8  /your/path/of/target.mp4
+python MediaDownload.py https://your/url/of/target.m3u8  /your/path/of/target.ts
 ```
 推荐使用URL指定输入。 
 # 三、提醒
